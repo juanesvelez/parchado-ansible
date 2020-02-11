@@ -1,0 +1,38 @@
+---
+#- hosts: '{{ servidor }}'
+#  tasks:
+  - name: Revisando paquetes para actualizar
+    shell: yum list updates | awk 'f;/Available Upgrades/{f=1;}' | awk '{ print $1 }'
+    changed_when: updates.stdout_lines | length > 0	
+    args:
+      warn: false
+    register: updates
+  - name: Paquetes para actualizar
+    debug:
+      msg: "Encontrados {{ updates.stdout_lines | length }} paquetes para actualizar:\n\n{{ updates.stdout }}"
+  - when: updates.stdout_lines | length > 0
+    block:
+      - name: Actualizando servidor via yum
+        yum:
+          name: "*"
+          state: latest
+        register: yum_result
+     
+      - debug: 
+         var: yum_result
+
+  - name: Reiniciando Servidor
+    shell: sleep 3; reboot
+    ignore_errors: true
+    changed_when: false
+    async: 1
+    poll: 0
+  - name: Esperando que el servidor reinicie
+    wait_for_connection:
+      timeout: 600
+      delay: 20
+    register: reboot_result
+  - name: Tiempo de reinicio
+    debug:
+      msg: "El servidor se ha reiniciado en {{ reboot_result.elapsed }} segundos." 
+...

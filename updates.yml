@@ -1,0 +1,14 @@
+# Include OS specific tasks
+- hosts: '{{ servidor }}'
+  tasks:
+    - name: Check CentOS or Red Hat Enterprise Linux
+      include_tasks: update-yum.yml
+      when: ansible_distribution == "CentOS" or ansible_distribution == 'Red Hat Enterprise Linux'
+
+    - name: Check Ubuntu or Debian
+      include_tasks: update-apt.yml
+      when: ansible_distribution == "Ubuntu" or ansible_distribution == 'Debian'
+
+    - name: Check Suse Enteprise
+      include_tasks: update-zypper.yml
+      when: ansible_distribution == "SLES"
